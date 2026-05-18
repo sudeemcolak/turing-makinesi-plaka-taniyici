@@ -181,7 +181,7 @@ SONUC : RED
 Python kurulu olduktan sonra terminal üzerinden aşağıdaki komut çalıştırılır:
 
 ```bash
-python plaka_taniyici.py
+python3 plaka_taniyici.py
 ```
 
 ---
