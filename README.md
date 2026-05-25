@@ -116,9 +116,7 @@ Burada:
 | q4       | İlk son rakam kontrolü             |
 | q5       | İkinci son rakam kontrolü          |
 | q6       | Üçüncü son rakam kontrolü          |
-| q7       | Giriş sonu kontrolü                |
-| q_accept | Kabul durumu                       |
-| q_reject | Hata / RED durumu                  |
+| q7       | Giriş sonu ve kabul durumu         |
 
 ---
 
