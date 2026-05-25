@@ -1,109 +1,87 @@
-
 class TuringMakinesi:
-
     def __init__(self, giris_metni):
-
-        # Bandın sonuna boşluk(blank) sembolü eklenir
-        self.bant = list(giris_metni) + ['_'] # Turing Makinesi mantığında bant teorik olarak sonsuzdur ve girişin nerede bittiğini anlayabilmek için kullanılır.
-
-        # Okuma/Yazma kafası başlangıç konumu
+        # Bandın sonuna boşluk (blank) sembolü eklenir.
+        # Turing Makinesi mantığında girdi bittikten sonra boşluk sembolü gelir.
+        self.bant = list(giris_metni) + ['_']
         self.kafa = 0
-
-        # Durumlar
         self.durum = 'q0'
-        self.kabul_durumu = 'q_accept'
-        self.red_durumu = 'q_reject'
+        self.kabul_durumu = 'q7'  
+        self.red_durumu = 'RED'
 
-        # N -> Rakam
-        # L -> Büyük Harf
-        # _ -> Boşluk
-
+        # Geçiş tablosu: q0-q6 arası durum geçişleri
         self.gecis_tablosu = {
-
-            'q0': {'N': 'q1'},   # ilk rakam
-            'q1': {'N': 'q2'},   # ikinci rakam
-
-            'q2': {'L': 'q3'},   # ilk harf
-            'q3': {'L': 'q4'},   # ikinci harf
-
-            'q4': {'N': 'q5'},   # üçüncü karakter (rakam)
-            'q5': {'N': 'q6'},   # dördüncü karakter (rakam)
-            'q6': {'N': 'q7'},   # beşinci karakter (rakam)
-
-            'q7': {'_': 'q_accept'}  # giriş sonu kontrolü
+            'q0': {'N': 'q1'},   # 1. Rakam okundu -> q1
+            'q1': {'N': 'q2'},   # 2. Rakam okundu -> q2
+            'q2': {'L': 'q3'},   # 1. Harf okundu   -> q3
+            'q3': {'L': 'q4'},   # 2. Harf okundu   -> q4
+            'q4': {'N': 'q5'},   # 3. Rakam okundu -> q5
+            'q5': {'N': 'q6'},   # 4. Rakam okundu -> q6
+            'q6': {'N': 'q7'},   # 5. Rakam okundu -> q7 (Kabul adımı öncesi)
+            'q7': {'_': 'KABUL'}  # q7'de boşluk okunursa işlem başarıyla biter
         }
 
-    # Okunan karakterin tipini belirler
     def sembol_tipini_bul(self, karakter):
-
-        # Rakam kontrolü
+        # Rakam kontrolü (0-9)
         if karakter.isdigit():
             return 'N'
-
-        # Büyük harf kontrolü
-        elif karakter.isalpha() and karakter.isupper():
+        # "küçük harf kabul edilmez" kuralı için isupper() ve isalpha() birlikte elenir
+        elif karakter.isalpha() and karakter.isupper() and karakter.isascii():
             return 'L'
-
         # Boşluk sembolü
         elif karakter == '_':
             return '_'
-
-        # Geçersiz karakter
         else:
-            return '?'  # Tanımsız karakter tipi
+            return '?' # Tanımsız karakter tipi
 
-    # Bant görüntüsünü yazdırır
     def banti_yazdir(self):
-
-        bant_metni = ''.join(self.bant) # Bant içeriğini listeden stringe çevirir
-
+        bant_metni = ''.join(self.bant)
         kafa_gosterimi = [' '] * len(self.bant)
+        if self.kafa < len(kafa_gosterimi):
+            kafa_gosterimi[self.kafa] = '^'
+        print(f"Bant           : {bant_metni}")
+        print(f"Kafa Konumu    : {''.join(kafa_gosterimi)}")
 
-        if self.kafa < len(kafa_gosterimi): #kafa bant sınırları içinde ise
-            kafa_gosterimi[self.kafa] = '^' # Kafanın bulunduğu konumu göstermek için '^' sembolü kullanılır
-
-        print("Bant :", bant_metni)
-        print("       " + ''.join(kafa_gosterimi))
-
-    # Bir adım çalıştırır
     def adim_calistir(self):
-
         mevcut_sembol = self.bant[self.kafa]
-
-        # Sembol tipini öğren
         sembol_tipi = self.sembol_tipini_bul(mevcut_sembol)
 
-        print("\n--------------------------------")
-        print(f"Durum          : {self.durum}")
-        print(f"Okunan Sembol  : {mevcut_sembol}")
-        print(f"Kafa Pozisyonu : {self.kafa}")
-        print("Kafa Hareketi  : R (Sağa)")
-
+        print("\n" + "-"*40)
+        print(f"Mevcut Durum   : {self.durum}")
+        print(f"Okunan Sembol  : '{mevcut_sembol}' (Tip: {sembol_tipi})")
         self.banti_yazdir()
 
-        # Geçiş tablosunda uygun geçiş var mı?
-        if (self.durum in self.gecis_tablosu and
-                sembol_tipi in self.gecis_tablosu[self.durum]):
+        # Geçiş kontrolü
+        if self.durum in self.gecis_tablosu and sembol_tipi in self.gecis_tablosu[self.durum]:
+            yeni_durum = self.gecis_tablosu[self.durum][sembol_tipi]
+            
+            if yeni_durum == 'KABUL':
+                self.durum = self.kabul_durumu  # q7'de kalıp döngüyü bitirme 
+                print("Kafa Hareketi  : - (Durdu)")
+                return True 
 
-            # Yeni duruma geç
-            self.durum = self.gecis_tablosu[self.durum][sembol_tipi]
-
-            # Kafayı sağa kaydır
+            print(f"Kafa Hareketi  : R (Sağa) -> Yeni Durum: {yeni_durum}")
+            self.durum = yeni_durum
             self.kafa += 1
-
         else:
-            # Tanımsız geçiş -> RED
+            print(f"HATA: {self.durum} durumunda '{mevcut_sembol}' sembolü için geçiş yok!")
             self.durum = self.red_durumu
 
-    # Makineyi çalıştırır
     def calistir(self):
-
-        print("\n= TURING MAKINESI BASLATILDI =")
-
-        # Kabul veya RED durumuna ulaşana kadar devam et
-        while (self.durum != self.kabul_durumu and
-               self.durum != self.red_durumu):
-
+        print("\n" + "="*15 + " TURING MAKİNESİ SİMÜLASYONU BAŞLADI " + "="*15)
+        
+        # q7'de boşluk kontrolü yapılana veya RED durumuna düşene kadar çalışır
+        while self.durum != self.red_durumu:
+            # Eğer q7 durumundaysak ve bantta boşluk varsa kabul edip bitiriyoruz
+            if self.durum == self.kabul_durumu and self.bant[self.kafa] == '_':
+                self.adim_calistir()
+                break
+            
+            if self.durum == self.kabul_durumu and self.bant[self.kafa] != '_':
+                # q7'ye ulaşıldı ama fazladan karakter var durumu
+                print(f"\nHATA: Format sonrasında fazladan karakter algılandı: '{self.bant[self.kafa]}'")
+                self.durum = self.red_durumu
+                break
+                
             self.adim_calistir()
 
         print("\n---------------------------------")
@@ -114,7 +92,6 @@ class TuringMakinesi:
 
         else:
             print("SONUC : RED")
-
 
 # Kullanıcıdan plaka bilgisi alınır
 plaka = input("Plaka giriniz (NNLLNNN): ")
